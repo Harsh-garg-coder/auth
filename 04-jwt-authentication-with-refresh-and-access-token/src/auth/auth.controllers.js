@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { createUser, findRefreshToken, findUserByEmail, findUserById, revokeRefreshToken, saveRefreshToken } from "./auth.repository.js";
+import { createUser, findRefreshToken, findUserByEmail, findUserById, revokeAllRefreshToken, revokeRefreshToken, saveRefreshToken } from "./auth.repository.js";
 import { createAccessToken, createRefreshToken, verifyRefreshToken } from "../helpers/tokens.helpers.js";
 import crypto from "crypto";
 
@@ -96,17 +96,32 @@ export const refreshController = async (req, res) => {
     const hashedRefreshToken = crypto.createHash("sha256").update(refresh_token).digest("hex");
     const refreshTokenRow = await findRefreshToken(hashedRefreshToken);
     if(!refreshTokenRow || refreshTokenRow?.is_revoked) {
+        if(refreshTokenRow?.is_revoked) {
+            // revoke all refresh token
+            await revokeAllRefreshToken(refreshTokenRow?.user_id);
+        }
         return res.status(401).json({error: "Unauthenticated"});
     }
 
     // here refresh token is valid and not revoked
     const accessToken = createAccessToken(refreshTokenRow?.user_id);
 
+    await revokeRefreshToken(hashedRefreshToken);
+    const newRefreshToken = createRefreshToken(refreshTokenRow?.user_id);
+    const newHashedRefreshToken = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
+    await saveRefreshToken(newHashedRefreshToken, refreshTokenRow?.user_id);
+
     res.cookie("access_token", accessToken, {
         httpOnly: true,
         secure: !isDev,
         sameSite: "lax",
         maxAge: 1000 * 60 * 15,
+    });
+    res.cookie("refresh_token", newRefreshToken, {
+        httpOnly: true,
+        secure: !isDev,
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 24 * 7,
     });
     res.status(200).json({message: "refreshed"});
 }

@@ -33,3 +33,8 @@ export const revokeRefreshToken = async (refreshToken) => {
     const result = await query("UPDATE refresh_tokens SET is_revoked = true WHERE refresh_token = $1", [refreshToken]);
     return result?.rowCount;
 }
+
+export const revokeAllRefreshToken = async (userId) => {
+    const result = await query("UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1", [userId]);
+    return result.rowCount;
+}
