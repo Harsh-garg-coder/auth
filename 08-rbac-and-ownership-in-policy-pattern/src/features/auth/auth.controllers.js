@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
-import { createUser, findRefreshToken, findUserByEmail, findUserById, revokeAllRefreshToken, revokeRefreshToken, saveRefreshToken } from "./auth.repository.js";
-import { createAccessToken, createRefreshToken, verifyRefreshToken } from "../helpers/tokens.helpers.js";
+import { assignRole, createUser, findRefreshToken, findUserByEmail, findUserById, getUserRoles, revokeAllRefreshToken, revokeRefreshToken, saveRefreshToken } from "./auth.repository.js";
+import { createAccessToken, createRefreshToken, verifyRefreshToken } from "../../helpers/tokens.helpers.js";
 import crypto from "crypto";
 
 const isDev = process.env.NODE_ENVIRONMENT === "dev";
@@ -14,9 +14,13 @@ export const signupController = async (req, res) => {
     } else {
         const hashedPassword = await bcrypt.hash(password, 12);
         const user = await createUser(email, hashedPassword);
+        // create user role
+        await assignRole(user.id, "User");
+
         return res.status(201).json({
             id: user.id,
             email: user.email,
+            role: "User"
         });
     }
 }
@@ -74,7 +78,8 @@ export const profileController = async (req, res) => {
             error: "user not found!",
         });
     } else {
-        res.status(200).json({ id: userId, email: user.email, role: user.role});
+        const userRoles = await getUserRoles(user.id);
+        res.status(200).json({ id: userId, email: user.email, roles: userRoles});
     }
 }
 
@@ -145,10 +150,3 @@ export const logoutController = async (req, res) => {
     res.clearCookie("refresh_token");
     res.status(200).json({message: "Logged out successfully!"});
 }
-
-export const adminController = (req, res) => {
-    res.status(200).json({
-        message: "Welcome admin!",
-        role: req.role,   
-    });
-};
