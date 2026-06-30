@@ -1,4 +1,4 @@
-import { query } from "../db/index.js";
+import { query } from "../../db/index.js";
 
 export const createPost = async (title, content, userId) => {
     const result = await query(
@@ -8,9 +8,6 @@ export const createPost = async (title, content, userId) => {
     return result.rows[0];
 }
 
-// ============ ACL functions ============
-
-// us post ki access-list me ek entry add karo (idempotent)
 export const grantPermission = async (postId, userId, permission) => {
     const result = await query(
         `INSERT INTO post_permissions (post_id, user_id, permission)
@@ -21,7 +18,6 @@ export const grantPermission = async (postId, userId, permission) => {
     return result.rowCount;
 }
 
-// check: kya is (post, user, permission) ki entry list me hai?
 export const hasPermission = async (postId, userId, permission) => {
     const result = await query(
         `SELECT 1 FROM post_permissions

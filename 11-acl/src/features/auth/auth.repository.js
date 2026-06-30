@@ -1,4 +1,4 @@
-import { query } from "../db/index.js";
+import { query } from "../../db/index.js";
 
 export const findUserByEmail = async (email) => {
     const user = await query("SELECT * FROM users WHERE email = $1", [email]);

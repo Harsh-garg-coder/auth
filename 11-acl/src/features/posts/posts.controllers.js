@@ -9,8 +9,6 @@ export const createPostController = async (req, res) => {
 
     const post = await createPost(title, content, req.user_id);
 
-    // ⭐ owner ko poori access-list me daal do (read/update/delete)
-    // ACL "pure" rakhne ke liye owner bhi bas list ki entries hai — koi special-case nahi
     await Promise.all([
         grantPermission(post.id, req.user_id, "read"),
         grantPermission(post.id, req.user_id, "update"),
@@ -21,9 +19,8 @@ export const createPostController = async (req, res) => {
 };
 
 export const getPostController = async (req, res) => {
-    // requireAcl("read") ne post fetch + verify kar liya → req.post available
     const post = req.post;
-    res.status(200).json({ id: post.id, title: post.title, content: post.content });
+    res.status(200).json(post);
 };
 
 export const updatePostController = async (req, res) => {
@@ -35,7 +32,7 @@ export const updatePostController = async (req, res) => {
     }
 
     const updatedPost = await updatePost(postId, title, content);
-    res.status(200).json({ id: updatedPost.id, title: updatedPost.title, content: updatedPost.content });
+    res.status(200).json(updatedPost);
 };
 
 export const deletePostController = async (req, res) => {
@@ -44,7 +41,6 @@ export const deletePostController = async (req, res) => {
     res.status(200).json({ message: "Post deleted successfully!" });
 };
 
-// owner kisi aur user ko ek permission grant kare (Google Doc "share" jaisa)
 export const shareController = async (req, res) => {
     const post = await findPostById(req.params.id);
     if (!post) {
@@ -53,7 +49,6 @@ export const shareController = async (req, res) => {
 
     const { email, permission } = req.body;
 
-    // sirf OWNER share kar sakta hai (sharing ek privileged action hai)
     if (post.user_id !== req.user_id) {
         return res.status(403).json({ error: "Only owner can share" });
     }

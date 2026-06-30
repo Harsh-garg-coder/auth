@@ -1,4 +1,4 @@
-import { verifyAccessToken } from "../helpers/tokens.helpers.js";
+import { verifyAccessToken } from "../../helpers/tokens.helpers.js";
 
 export const requireAuth = (req, res, next) => {
     const { access_token } = req.cookies;

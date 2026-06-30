@@ -25,21 +25,14 @@ CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    user_id INT NOT NULL,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-
-    FOREIGN KEY (user_id)
-    REFERENCES users(id)
-    ON DELETE CASCADE
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- ============ ACL (Access Control List) ============
--- per-resource explicit grant: "user X ko post Y pe Z permission hai"
--- har row = ek entry us post ki access-list me
 CREATE TABLE IF NOT EXISTS post_permissions (
     post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     permission TEXT NOT NULL CHECK (permission IN ('read', 'update', 'delete')),
-    PRIMARY KEY (post_id, user_id, permission)   -- same grant dobara nahi
+    PRIMARY KEY (post_id, user_id, permission)
 );
