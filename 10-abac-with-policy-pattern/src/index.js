@@ -1,8 +1,9 @@
 import "dotenv/config";
 import express from "express";
-import authRouter from "./auth/auth.routes.js";
+import authRouter from "./features/auth/auth.routes.js";
 import cookieParser from "cookie-parser";
-import postsRouter from "./posts/posts.routes.js";
+import postRouter from "./features/posts/post.routes.js";
+import userRouter from "./features/users/users.routes.js";
 
 const app = express();
 
@@ -12,7 +13,8 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/auth", authRouter);
-app.use("/api/posts", postsRouter);
+app.use("/api/posts", postRouter);
+app.use("/api/users", userRouter);
 
 // error handler
 app.use((err, req, res, next) => {
